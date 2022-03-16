@@ -55,9 +55,23 @@ class MapViewController extends GetxController {
       list_of_point.add(current_location);
       list_of_point.add(goal);
     }
-
+    print(
+        "current_location: ${current_location.latitude}, ${current_location.longitude} \n goal_position : ${goal.latitude}, ${goal.longitude}");
     update();
   }
+//sample data polyline
+// current_location: 22.4570783, 114.00128169999999
+// goal_position : 22.456890670976886, 114.00040995329618
+
+// according to the compass check is water(onwater.io) or forbidden_zone per meter
+// upto 15 requests per minute (onwater.io)
+
+// get 40meters data from the LIDAR　sensor
+// point the forbidden_zone in map (in circle format)
+// refresh the points per 180 degrees
+// check next 40 meters points collision
+// change polyline
+  void calculate_polyline() {}
 
   final List<Polygon> all_polygon = <Polygon>[].obs;
 
