@@ -60,21 +60,15 @@ class MapViewController extends GetxController {
   }
 
   final List<Polygon> all_polygon = <Polygon>[].obs;
-  final List<LatLng> list_of_vertices = <LatLng>[].obs;
 
-  void add_polygon() {
+  void add_polygon(String IDname, list_of_vertices) {
     var _polygon = Polygon(
-        polygonId: PolygonId("forbidden_zone_1"),
+        polygonId: PolygonId(IDname),
         fillColor: Colors.redAccent,
         points: list_of_vertices,
-        strokeColor: Colors.red);
+        strokeColor: Colors.red,
+        visible: true);
     all_polygon.add(_polygon);
-    update();
-  }
-
-  void add_vertices(List<LatLng> vertices) {
-    list_of_vertices.clear();
-    for (int i = 0; i < vertices.length; i++) list_of_vertices.add(vertices[i]);
     update();
   }
 
@@ -82,21 +76,18 @@ class MapViewController extends GetxController {
   void onInit() {
     var _vertices1 = <LatLng>[
       LatLng(22.4570046961716, 114.00095410645008),
-      LatLng(22.456962246585615, 114.0009480714798),
+      LatLng(22.457102609035683, 114.00092426687479),
       LatLng(22.457119031123202, 114.0010553598404),
       LatLng(22.457017709910684, 114.00106374174356)
     ];
-    add_vertices(_vertices1);
-    add_polygon();
-    print(all_polygon);
+    add_polygon("forbidden_zone_1", _vertices1);
     var _vertices2 = <LatLng>[
       LatLng(22.45692010683777, 114.00063794106245),
       LatLng(22.456775406282567, 114.0006248652935),
       LatLng(22.45679337766594, 114.00079149752855),
       LatLng(22.45698083764678, 114.00077506899834)
     ];
-    add_vertices(_vertices2);
-    add_polygon();
+    add_polygon("forbidden_zone_2", _vertices2);
     print(all_polygon);
     super.onInit();
   }
