@@ -43,6 +43,7 @@ dependencies:
   get: ^4.6.1
   roslibdart: ^0.0.1-dev+4
   platform_maps_flutter: ^1.0.2
+  http: ^0.13.4
   # path: ../../devel/share/gendart/ros/sensor_msgs
 
 dev_dependencies:

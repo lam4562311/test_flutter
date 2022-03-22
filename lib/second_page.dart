@@ -14,7 +14,7 @@ class SecondRoute extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Second Route"),
+        title: Text("Route"),
       ),
       body: Stack(children: <Widget>[
         Obx(

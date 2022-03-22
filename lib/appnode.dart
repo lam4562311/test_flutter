@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:dartros/dartros.dart' as dartros;
 import 'package:dartx/dartx.dart';
+import 'package:testing_flutter/reverse_geocoding.dart';
 // import 'package:sensor_msgs/msgs.dart' as sensor_msgs;
 import 'package:flutter/material.dart';
 import 'package:roslibdart/roslibdart.dart';
@@ -32,6 +33,8 @@ class ROSnodeController extends GetxController {
   }
 }
 
+Album text = Album(userId: 13, id: 13, title: "title");
+
 class Third extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -39,7 +42,16 @@ class Third extends StatelessWidget {
       appBar: AppBar(
         title: Text("Third Route"),
       ),
-      body: Center(),
+      body: Center(
+        child: Column(children: [
+          Text('${text}'),
+          ElevatedButton(
+              child: Text('a'),
+              onPressed: () async {
+                text = await text.fetchAlbum();
+              }),
+        ]),
+      ),
     );
   }
 }

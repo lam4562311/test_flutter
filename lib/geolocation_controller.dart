@@ -71,6 +71,7 @@ class MapViewController extends GetxController {
 // refresh the points per 180 degrees
 // check next 40 meters points collision
 // change polyline
+  RxDouble zoom = 19.0.obs;
   void calculate_polyline() {}
 
   final List<Polygon> all_polygon = <Polygon>[].obs;
