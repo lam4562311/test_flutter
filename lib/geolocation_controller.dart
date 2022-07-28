@@ -3,10 +3,12 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:get/get.dart';
 import 'package:platform_maps_flutter/platform_maps_flutter.dart';
+import 'package:flutter_compass/flutter_compass.dart';
 
 class MapViewController extends GetxController {
   static MapViewController get to => Get.find();
   RxBool routing = false.obs;
+  RxBool stop_routing = false.obs;
   final List<Marker> allmarker = <Marker>[
     Marker(
       visible: false,
@@ -113,7 +115,7 @@ class GeolocationController extends GetxController {
   Rx<String> Address = 'Search'.obs;
   Rx<Position>? position;
   RxString location = 'Null, Press Button'.obs;
-
+  Rx<double> direction = 0.0.obs;
   final TextEditingController _controller = TextEditingController();
   // final _channel =
   //     WebSocketChannel.connect(Uri.parse('wss://192.168.0.100:8081'));
@@ -125,6 +127,12 @@ class GeolocationController extends GetxController {
     init = true;
     getGeoLocationPosition();
     super.onInit();
+    FlutterCompass.events?.listen((var compass) {
+      direction.value = compass.heading!;
+      // print('direction: $_direction');
+      // print('accuracy ${direction.accuracy}');
+      update();
+    });
   }
 
   Future<void> getGeoLocationPosition() async {
