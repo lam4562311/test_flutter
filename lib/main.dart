@@ -55,7 +55,6 @@ class _HomepageState extends State<Homepage> {
   final rosController = Get.put(ROSnodeController());
   LatLng? goal;
   RxString location = 'Null, Press Button'.obs;
-  // Rx<String> Address = 'Search'.obs;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -79,18 +78,18 @@ class _HomepageState extends State<Homepage> {
             SizedBox(
               height: 10,
             ),
-            // Text(
-            //   'ADDRESS',
-            //   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            // ),
+            Text(
+              'Battery Level',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
             SizedBox(
               height: 10,
             ),
-            // Obx(
-            //   () => Text(
-            //     '${Address}',
-            //   ),
-            // ),
+            Obx(
+              () => Text(
+                '${rosController.battery}',
+              ),
+            ),
             ElevatedButton(
                 onPressed: () async {
                   await controller.getGeoLocationPosition();

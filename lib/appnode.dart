@@ -23,12 +23,15 @@ class ROSnodeController extends GetxController {
   static MapViewController get map => Get.find();
   static GeolocationController get geo => Get.find();
   int msgToPublished = 0;
+  RxBool navigation_stat = false.obs;
+  RxString battery = '0.0'.obs;
+
   late Ros ros;
   late Service navigation;
   late Service gps_compass;
-  RxBool navigation_stat = false.obs;
   late Topic nav;
   late Topic polyline;
+  late Topic battery_sub;
 
   void connect_to_server() {
     print('ros');
@@ -60,6 +63,14 @@ class ROSnodeController extends GetxController {
       queueLength: 1,
       queueSize: 1,
     );
+    battery_sub = Topic(
+      ros: ros,
+      name: '/battery',
+      type: "std_msgs/String",
+      reconnectOnClose: true,
+      queueLength: 1,
+      queueSize: 1,
+    );
     ros.connect();
     print('connected');
     Timer(const Duration(seconds: 10), () async {
@@ -74,11 +85,20 @@ class ROSnodeController extends GetxController {
       await polyline.subscribe(sub_polyline);
       print("Polyline subscribe");
     });
+    Timer(const Duration(milliseconds: 10), () async {
+      await battery_sub.subscribe(sub_battery);
+      print("Battery subscribe");
+    });
   }
 
   void destroyConnection() async {
     // await chatter.unsubscribe();
     await ros.close();
+    update();
+  }
+
+  Future<void> sub_battery(Map<String, dynamic> msg) async {
+    battery.value = msg['data'];
     update();
   }
 
