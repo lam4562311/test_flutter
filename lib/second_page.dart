@@ -9,7 +9,8 @@ PlatformMapController? googleMapController;
 
 class SecondRoute extends StatelessWidget {
   @override
-  var goal;
+  var home;
+
   final controller = Get.put(GeolocationController());
   final mapController = Get.put(MapViewController());
   final rosController = Get.put(ROSnodeController());
@@ -53,10 +54,15 @@ class SecondRoute extends StatelessWidget {
                   bottom: 20,
                   child: ElevatedButton(
                       onPressed: () async {
-                        await controller.getGeoLocationPosition();
+                        // await controller.getGeoLocationPosition();
                         rosController.navigate_pub(
-                            LatLng(controller.position!.value.latitude,
-                                controller.position!.value.longitude),
+                            LatLng(
+                                controller
+                                    .optimized_position!.value['latitude'],
+                                controller
+                                    .optimized_position!.value['longitude']),
+                            // LatLng(controller.position!.value.latitude,
+                            //     controller.position!.value.longitude),
                             mapController.allmarker[0].position,
                             LatLng(22.456169335506456, 114.00028388947248),
                             LatLng(22.457302152759784, 114.00134067982435),
@@ -80,8 +86,13 @@ class SecondRoute extends StatelessWidget {
                       onPressed: () async {
                         mapController.routing.value = false;
                         rosController.navigate_pub(
-                            LatLng(controller.position!.value.latitude,
-                                controller.position!.value.longitude),
+                            LatLng(
+                                controller
+                                    .optimized_position!.value['latitude'],
+                                controller
+                                    .optimized_position!.value['longitude']),
+                            // LatLng(controller.position!.value.latitude,
+                            //     controller.position!.value.longitude),
                             mapController.allmarker[0].position,
                             LatLng(22.456169335506456, 114.00028388947248),
                             LatLng(22.457302152759784, 114.00134067982435),
@@ -90,6 +101,46 @@ class SecondRoute extends StatelessWidget {
                       },
                       child: Text('Stop routing')))),
         ),
+        Positioned(
+          right: 50,
+          bottom: 50,
+          child: ElevatedButton(
+              onPressed: () async {
+                // await controller.getGeoLocationPosition();
+                home = LatLng(controller.optimized_position!.value['latitude'],
+                    controller.optimized_position!.value['longitude']);
+                // goal = LatLng(controller.position!.value.latitude,
+                //     controller.position!.value.longitude);
+                print(home);
+                mapController.add_home(home);
+              },
+              child: Text('Set Home')),
+        ),
+        Obx(() => Visibility(
+            visible: mapController.home_routing.value,
+            child: Positioned(
+                right: 50,
+                bottom: 10,
+                child: ElevatedButton(
+                    child: Text('Back Home'),
+                    onPressed: () async {
+                      // await controller.getGeoLocationPosition();
+
+                      rosController.navigate_pub(
+                          LatLng(
+                              controller.optimized_position!.value['latitude'],
+                              controller
+                                  .optimized_position!.value['longitude']),
+                          // LatLng(controller.position!.value.latitude,
+                          //     controller.position!.value.longitude),
+                          home!,
+                          LatLng(22.456169335506456, 114.00028388947248),
+                          LatLng(22.457302152759784, 114.00134067982435),
+                          LatLng(22.4567357441, 114.000812285),
+                          true);
+                      mapController.home_routing.value = false;
+                      mapController.stop_routing.value = true;
+                    })))),
       ]),
     );
   }

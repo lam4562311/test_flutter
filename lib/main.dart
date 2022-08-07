@@ -53,6 +53,8 @@ class Homepage extends StatefulWidget {
 class _HomepageState extends State<Homepage> {
   final controller = Get.put(GeolocationController());
   final rosController = Get.put(ROSnodeController());
+  final mapController = Get.put(MapViewController());
+
   LatLng? goal;
   RxString location = 'Null, Press Button'.obs;
   @override
@@ -63,7 +65,36 @@ class _HomepageState extends State<Homepage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'Coordinates Points',
+              'Current Location',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(
+              height: 10,
+            ),
+            Obx(() => Visibility(
+                  visible: controller.initized.isTrue,
+                  child: Text(
+                    'Latitude: ${controller.optimized_position?.value['latitude']}, \nLongitude${controller.optimized_position?.value['longitude']}',
+                    // 'Latitude: ${controller.position?.value.latitude}, \nLongitude${controller.position?.value.longitude}',
+                    style: TextStyle(color: Colors.black, fontSize: 16),
+                  ),
+                )),
+            // Text(
+            //   'Optimized Location',
+            //   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            // ),
+            // SizedBox(
+            //   height: 10,
+            // ),
+            // Obx(() => Visibility(
+            //       visible: controller.initized.isTrue,
+            //       child: Text(
+            //         'Latitude: ${controller.optimized_position?.value['latitude']}, \nLongitude${controller.optimized_position?.value['longitude']}',
+            //         style: TextStyle(color: Colors.black, fontSize: 16),
+            //       ),
+            //     )),
+            Text(
+              'Home location',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             SizedBox(
@@ -92,32 +123,29 @@ class _HomepageState extends State<Homepage> {
             ),
             ElevatedButton(
                 onPressed: () async {
-                  await controller.getGeoLocationPosition();
-                  // GeolocationController.to.GetAddressFromLatLong();
-                  goal = LatLng(controller.position!.value.latitude,
-                      controller.position!.value.longitude);
+                  // await controller.getGeoLocationPosition();
+                  goal = LatLng(
+                      controller.optimized_position!.value['latitude'],
+                      controller.optimized_position!.value['longitude']);
+                  // goal = LatLng(controller.position!.value.latitude,
+                  //     controller.position!.value.longitude);
                   print(goal);
-                  // List<Placemark> placemarks = await placemarkFromCoordinates(
-                  //     goal!.latitude, goal!.longitude);
-                  // print(placemarks);
-                  // Placemark place = placemarks[0];
-                  // Address.value =
-                  //     '${place.street}, ${place.subLocality}, ${place.locality}, ${place.postalCode}, ${place.country}';
                   location.value =
-                      'Lat: ${goal!.latitude} ,\n Long: ${goal!.longitude}';
+                      'Latitude: ${goal!.latitude} ,\n Longitude: ${goal!.longitude}';
+                  mapController.add_home(goal!);
                 },
                 child: Text('Set Home')),
-            SizedBox(
-              height: 10,
-            ),
-            Text('Please connect to the wifi with'),
-            Text(' SSID: pi-ap, Password: 64842951'),
-            Text('then press the below button'),
-            ElevatedButton(
-                onPressed: () async {
-                  rosController.connect_to_server();
-                },
-                child: Text('connect to the server')),
+            // SizedBox(
+            //   height: 10,
+            // ),
+            // Text('Please connect to the wifi with'),
+            // Text(' SSID: pi-ap, Password: 64842951'),
+            // Text('then press the below button'),
+            // ElevatedButton(
+            //     onPressed: () async {
+            //       rosController.connect_to_server();
+            //     },
+            //     child: Text('connect to the server')),
             SizedBox(
               height: 10,
             ),
@@ -126,19 +154,31 @@ class _HomepageState extends State<Homepage> {
                 onPressed: () {
                   Get.toNamed("/second");
                 }),
-            ElevatedButton(
-                child: Text('Back Home'),
-                onPressed: () async {
-                  await controller.getGeoLocationPosition();
-                  rosController.navigate_pub(
-                      LatLng(controller.position!.value.latitude,
-                          controller.position!.value.longitude),
-                      goal!,
-                      LatLng(22.456169335506456, 114.00028388947248),
-                      LatLng(22.457302152759784, 114.00134067982435),
-                      LatLng(22.4567357441, 114.000812285),
-                      true);
-                }),
+            // ElevatedButton(
+            //     child: Text('Back Home'),
+            //     onPressed: () async {
+            //       // await controller.getGeoLocationPosition();
+
+            //       rosController.navigate_pub(
+            //           LatLng(controller.optimized_position!.value['latitude'],
+            //               controller.optimized_position!.value['longitude']),
+            //           // LatLng(controller.position!.value.latitude,
+            //           //     controller.position!.value.longitude),
+            //           goal!,
+            //           LatLng(22.456169335506456, 114.00028388947248),
+            //           LatLng(22.457302152759784, 114.00134067982435),
+            //           LatLng(22.4567357441, 114.000812285),
+            //           true);
+            //     }),
+            SizedBox(
+              height: 100,
+            ),
+            Obx(() => Visibility(
+                  visible: rosController.Cruise.value,
+                  child: ListTile(
+                      title: Center(child: const Text("Cruise Control Enable")),
+                      tileColor: Color.fromARGB(255, 0, 255, 0)),
+                )),
           ],
         ),
       ),

@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
@@ -9,11 +11,19 @@ class MapViewController extends GetxController {
   static MapViewController get to => Get.find();
   RxBool routing = false.obs;
   RxBool stop_routing = false.obs;
+  RxBool home = true.obs;
+  RxBool home_routing = true.obs;
   final List<Marker> allmarker = <Marker>[
     Marker(
       visible: false,
       consumeTapEvents: false,
       markerId: MarkerId("goal"),
+      position: LatLng(22.4570788481, 114.001282846),
+    ),
+    Marker(
+      visible: false,
+      consumeTapEvents: false,
+      markerId: MarkerId("home"),
       position: LatLng(22.4570788481, 114.001282846),
     ),
   ].obs;
@@ -31,6 +41,20 @@ class MapViewController extends GetxController {
     print("latitude: ${pos.latitude} longitude: ${pos.longitude}");
     allmarker[0] = (_marker);
     routing.value = true;
+    update();
+  }
+
+  void add_home(LatLng pos) {
+    var _marker = Marker(
+      consumeTapEvents: true,
+      markerId: MarkerId("home"),
+      position: LatLng(pos.latitude, pos.longitude),
+      infoWindow: InfoWindow(
+          title: "Location",
+          snippet: "latitude: ${pos.latitude} longitude: ${pos.longitude}"),
+    );
+    print("Home => latitude: ${pos.latitude} longitude: ${pos.longitude}");
+    allmarker[1] = (_marker);
     update();
   }
 
@@ -116,26 +140,28 @@ class GeolocationController extends GetxController {
   Rx<Position>? position;
   RxString location = 'Null, Press Button'.obs;
   Rx<double> direction = 0.0.obs;
-  final TextEditingController _controller = TextEditingController();
-  // final _channel =
-  //     WebSocketChannel.connect(Uri.parse('wss://192.168.0.100:8081'));
-  late bool init;
+  List<Map<String, double?>>? value;
+  int i = 0;
+  var optimized_position;
+  RxBool initized = false.obs;
 
   @override
-  void onInit() {
-    // super.onInit();
-    init = true;
-    getGeoLocationPosition();
+  void onInit() async {
     super.onInit();
     FlutterCompass.events?.listen((var compass) {
       direction.value = compass.heading!;
-      // print('direction: $_direction');
-      // print('accuracy ${direction.accuracy}');
+      DateTime time = DateTime.now();
+      print(time.hour.toString() +
+          " : " +
+          time.minute.toString() +
+          " : " +
+          time.second.toString() +
+          " , " +
+          'direction: $direction');
+      // print('accuracy ${compass.accuracy}');
       update();
     });
-  }
 
-  Future<void> getGeoLocationPosition() async {
     bool serviceEnabled;
     LocationPermission permission;
     // Test if location services are enabled.
@@ -166,22 +192,62 @@ class GeolocationController extends GetxController {
     }
     // When we reach here, permissions are granted and we can
     // continue accessing the position of the device.
-    if (init) {
-      Position tmp = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.best);
-
-      position = (tmp).obs;
-      position?.value = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.best);
-      init = false;
-    } else {
-      position?.value = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.best);
-      location.value =
-          'Lat: ${position?.value.latitude} , Long: ${position?.value.longitude}';
-    }
+    Position tmp = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.best);
+    position = (tmp).obs;
+    optimized_position =
+        ({'latitude': tmp.latitude, 'longitude': tmp.longitude}).obs;
+    initized.value = true;
     update();
+    StreamSubscription<Position> positionStream =
+        Geolocator.getPositionStream().listen((Position pos) {
+      print(i);
+      DateTime time = DateTime.now();
+      print(time.hour.toString() +
+          " : " +
+          time.minute.toString() +
+          " : " +
+          time.second.toString() +
+          " , " +
+          "pos: $pos");
+      position?.value = pos;
+      if (i == 2) {
+        optimized_position.value = {
+          'latitude': value!.map((x) => x['latitude']!).average,
+          'longitude': value!.map((x) => x['longitude']!).average
+        };
+        print("optimized_position: $optimized_position");
+        i = 0;
+        value?.clear();
+        value?.add(optimized_position.value);
+      } else if (i == 0) {
+        value = [
+          {'latitude': pos.latitude, 'longitude': pos.longitude}
+        ];
+      } else {
+        value?.add({'latitude': pos.latitude, 'longitude': pos.longitude});
+      }
+      i++;
+    });
   }
+
+  // Future<void> getGeoLocationPosition() async {
+  //   if (init) {
+  //     Position tmp = await Geolocator.getCurrentPosition(
+  //         desiredAccuracy: LocationAccuracy.best);
+
+  //     position = (tmp).obs;
+  //     position?.value = await Geolocator.getCurrentPosition(
+  //         desiredAccuracy: LocationAccuracy.best);
+  //     init = false;
+  //   } else {
+  //     position?.value = await Geolocator.getCurrentPosition(
+  //         desiredAccuracy: LocationAccuracy.best);
+  //     location.value =
+  //         'Lat: ${position?.value.latitude} , Long: ${position?.value.longitude}';
+  //   }
+  //   update();
+  // }
 
   Future<void> GetAddressFromLatLong() async {
     double latitude = position!.value.latitude;

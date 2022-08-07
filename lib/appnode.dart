@@ -1,15 +1,20 @@
 import 'dart:async';
-// import 'package:dartros/dartros.dart' as dartros;
-// import 'package:dartx/dartx.dart';
+import 'dart:convert' show utf8;
 import 'package:testing_flutter/reverse_geocoding.dart';
 // import 'package:sensor_msgs/msgs.dart' as sensor_msgs;
 import 'package:flutter/material.dart';
 import 'package:roslibdart/roslibdart.dart';
 import 'package:get/get.dart';
-import 'package:path/path.dart' as path;
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/services.dart';
+import 'package:wifi_iot/wifi_iot.dart';
+import 'package:flutter_ip/flutter_ip.dart';
+import 'package:network_info_plus/network_info_plus.dart';
+import 'package:wifi/wifi.dart';
+import 'package:ping_discover_network/ping_discover_network.dart';
+import 'package:web_socket_channel/io.dart';
+import 'package:web_socket_channel/status.dart' as status;
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
@@ -25,6 +30,7 @@ class ROSnodeController extends GetxController {
   int msgToPublished = 0;
   RxBool navigation_stat = false.obs;
   RxString battery = '0.0'.obs;
+  RxBool Cruise = false.obs;
 
   late Ros ros;
   late Service navigation;
@@ -32,11 +38,54 @@ class ROSnodeController extends GetxController {
   late Topic nav;
   late Topic polyline;
   late Topic battery_sub;
+  late Topic cruise_sub;
+  var server;
+  var host;
+  bool connected = false;
+  List<Socket> sockets = [];
+  void onInit() async {
+    super.onInit();
+
+    final server =
+        await ServerSocket.bind('0.0.0.0', 4041).then((serverSocket) {
+      serverSocket.listen((socket) {
+        socket.write("Request");
+        onRequest(socket);
+        if (connected == true) {
+          serverSocket.close();
+        }
+      });
+    });
+    connect_to_server();
+  }
+
+  void onRequest(Socket socket) {
+    if (!sockets.contains(socket)) {
+      sockets.add(socket);
+    }
+    socket.listen((Uint8List data) {
+      this.onData(data);
+      socket.add(utf8.encode("hello client!"));
+    });
+  }
+
+  void onData(Uint8List data) {
+    DateTime time = DateTime.now();
+    host = String.fromCharCodes(data).trim();
+    print(time.hour.toString() +
+        "h" +
+        time.minute.toString() +
+        " : " +
+        String.fromCharCodes(data));
+    connect_to_server();
+    connected = true;
+    update();
+  }
 
   void connect_to_server() {
     print('ros');
-    Ros ros = Ros(url: 'ws://192.168.12.1:9090');
-    // Ros ros = Ros(url: 'ws://lam4562311.tplinkdns.com:9090');
+    // Ros ros = Ros(url: 'ws://$host:9090');
+    Ros ros = Ros(url: 'ws://lam4562311.tplinkdns.com:9090');
     gps_compass = Service(
       ros: ros,
       name: '/GPS_COMPASS',
@@ -71,6 +120,14 @@ class ROSnodeController extends GetxController {
       queueLength: 1,
       queueSize: 1,
     );
+    cruise_sub = Topic(
+      ros: ros,
+      name: 'cruise',
+      type: 'std_msgs/Bool',
+      reconnectOnClose: true,
+      queueLength: 1,
+      queueSize: 1,
+    );
     ros.connect();
     print('connected');
     Timer(const Duration(seconds: 10), () async {
@@ -85,9 +142,13 @@ class ROSnodeController extends GetxController {
       await polyline.subscribe(sub_polyline);
       print("Polyline subscribe");
     });
-    Timer(const Duration(milliseconds: 10), () async {
+    Timer(const Duration(seconds: 1), () async {
       await battery_sub.subscribe(sub_battery);
       print("Battery subscribe");
+    });
+    Timer(const Duration(milliseconds: 10), () async {
+      await cruise_sub.subscribe(sub_cruise);
+      print("Cruise subscribe");
     });
   }
 
@@ -100,6 +161,10 @@ class ROSnodeController extends GetxController {
   Future<void> sub_battery(Map<String, dynamic> msg) async {
     battery.value = msg['data'];
     update();
+  }
+
+  Future<void> sub_cruise(Map<String, dynamic> msg) async {
+    Cruise.value = msg['data'];
   }
 
   Future<void> sub_polyline(Map<String, dynamic> msg) async {
@@ -120,6 +185,7 @@ class ROSnodeController extends GetxController {
       map.all_Polyline.clear();
       map.list_of_point.clear();
       map.stop_routing.value = false;
+      map.home_routing.value = true;
       sleep(Duration(seconds: 1));
       Get.dialog(
         AlertDialog(
@@ -134,10 +200,12 @@ class ROSnodeController extends GetxController {
   Future<Map<String, dynamic>>? posHandler(Map<String, dynamic> args) async {
     Map<String, dynamic> response = {};
     print("start");
-    await geo.getGeoLocationPosition();
+    // await geo.getGeoLocationPosition();
     response['position'] = {
-      'latitude': geo.position!.value.latitude,
-      'longitude': geo.position!.value.longitude
+      'latitude': geo.optimized_position!.value['latitude'],
+      'longitude': geo.optimized_position!.value['longitude']
+      // 'latitude': geo.position!.value.latitude,
+      // 'longitude': geo.position!.value.longitude
     };
     response['angle'] = geo.direction.value;
     update();
