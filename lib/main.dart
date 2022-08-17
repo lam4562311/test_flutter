@@ -146,11 +146,11 @@ class _HomepageState extends State<Homepage> {
             //       rosController.connect_to_server();
             //     },
             //     child: Text('connect to the server')),
-            SizedBox(
+            const SizedBox(
               height: 10,
             ),
             ElevatedButton(
-                child: Text('Open route'),
+                child: const Text('Open route'),
                 onPressed: () {
                   Get.toNamed("/second");
                 }),
@@ -170,13 +170,13 @@ class _HomepageState extends State<Homepage> {
             //           LatLng(22.4567357441, 114.000812285),
             //           true);
             //     }),
-            SizedBox(
+            const SizedBox(
               height: 100,
             ),
             Obx(() => Visibility(
                   visible: rosController.Cruise.value,
-                  child: ListTile(
-                      title: Center(child: const Text("Cruise Control Enable")),
+                  child: const ListTile(
+                      title: Center(child: Text("Cruise Control Enable")),
                       tileColor: Color.fromARGB(255, 0, 255, 0)),
                 )),
           ],

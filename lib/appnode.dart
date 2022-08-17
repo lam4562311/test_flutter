@@ -165,6 +165,7 @@ class ROSnodeController extends GetxController {
 
   Future<void> sub_cruise(Map<String, dynamic> msg) async {
     Cruise.value = msg['data'];
+    update();
   }
 
   Future<void> sub_polyline(Map<String, dynamic> msg) async {
